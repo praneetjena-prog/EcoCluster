@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ECOCLUSTER // SWISS TELEMETRY & PARETO CONSOLE</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg-paper: #F6F5F0;
+            --bg-surface: #FFFFFF;
+            --ink: #0E0E10;
+            --ink-muted: #5A5A62;
+            --swiss-red: #FF2A00;
+            --eco-green: #008F5D;
+            --water-blue: #0057FF;
+            --warn-amber: #D97706;
+            --border: 1.5px solid #0E0E10;
+            --border-heavy: 2px solid #0E0E10;
+            --shadow-hard: 4px 4px 0px #0E0E10;
+            --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-paper);
+            color: var(--ink);
+            font-family: var(--font-sans);
+            line-height: 1.4;
+            padding: 24px;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .shell {
+            max-width: 1440px;
+            margin: 0 auto;
+            border: var(--border-heavy);
+            background: var(--bg-surface);
+            box-shadow: var(--shadow-hard);
+        }
+
+        /* TOP MASTHEAD */
+        .masthead {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr;
+            border-bottom: var(--border-heavy);
+        }
+
+        .masthead-cell {
+            padding: 20px 24px;
+            border-right: var(--border);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .masthead-cell:last-child {
+            border-right: none;
+        }
+
+        .kicker {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--ink-muted);
+            margin-bottom: 6px;
+        }
+
+        .brand-title {
+            font-size: 28px;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            line-height: 1.05;
+            text-transform: uppercase;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-family: var(--font-mono);
+            font-size: 12px;
+            font-weight: 700;
+            padding: 4px 10px;
+            border: var(--border);
+            background: var(--bg-paper);
+            width: fit-content;
+            margin-top: 8px;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            background: var(--eco-green);
+            display: inline-block;
+        }
+
+        /* SECTION HEADER BAR */
+        .section-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 24px;
+            background: var(--ink);
+            color: var(--bg-surface);
+            font-family: var(--font-mono);
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+        }
+
+        /* REGION TELEMETRY 4-COLUMN SWISS GRID */
+        .telemetry-strip {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            border-bottom: var(--border-heavy);
+        }
+
+        .region-card {
+            padding: 20px 24px;
+            border-right: var(--border);
+            background: var(--bg-surface);
+            transition: background 0.12s ease;
+        }
+
+        .region-card:last-child {
+            border-right: none;
+        }
+
+        .region-card.active-target {
+            background: #FFFDF7;
+            box-shadow: inset 0 -4px 0 var(--swiss-red);
+        }
+
+        .region-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            border-bottom: var(--border);
+            padding-bottom: 10px;
+            margin-bottom: 14px;
+        }
+
+        .region-name {
+            font-size: 18px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: -0.02em;
+        }
+
+        .wsi-tag {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            font-weight: 700;
+            padding: 2px 6px;
+            border: var(--border);
+            background: var(--bg-paper);
+        }
+
+        .metric-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .metric-box .label {
+            font-family: var(--font-mono);
+            font-size: 10px;
+            color: var(--ink-muted);
+            text-transform: uppercase;
+        }
+
+        .metric-box .val {
+            font-family: var(--font-mono);
+            font-size: 18px;
+            font-weight: 700;
+            margin-top: 2px;
+        }
+
+        /* MAIN WORKSPACE: LEFT CONTROLS + RIGHT PARETO MATRIX */
+        .workspace {
+            display: grid;
+            grid-template-columns: 420px 1fr;
+            border-bottom: var(--border-heavy);
+        }
+
+        .control-panel {
+            padding: 24px;
+            border-right: var(--border-heavy);
+            background: var(--bg-paper);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .panel-group {
+            background: var(--bg-surface);
+            border: var(--border);
+            padding: 16px;
+            box-shadow: 3px 3px 0px var(--ink);
+        }
+
+        .panel-title {
+            font-family: var(--font-mono);
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            border-bottom: var(--border);
+            padding-bottom: 8px;
+            margin-bottom: 14px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .control-row {
+            margin-bottom: 12px;
+        }
+
+        .control-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .control-label {
+            display: flex;
+            justify-content: space-between;
+            font-family: var(--font-mono);
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            accent-color: var(--swiss-red);
+            cursor: pointer;
+        }
+
+        input[type="number"],
+        input[type="text"] {
+            width: 100%;
+            padding: 8px 10px;
+            font-family: var(--font-mono);
+            font-size: 13px;
+            font-weight: 600;
+            border: var(--border);
+            background: var(--bg-paper);
+        }
+
+        .input-grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 14px 18px;
+            font-family: var(--font-mono);
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            background: var(--swiss-red);
+            color: #FFFFFF;
+            border: var(--border-heavy);
+            box-shadow: var(--shadow-hard);
+            cursor: pointer;
+            transition: transform 0.08s ease, box-shadow 0.08s ease;
+        }
+
+        .btn-primary:active {
+            transform: translate(2px, 2px);
+            box-shadow: 2px 2px 0px var(--ink);
+        }
+
+        .btn-secondary {
+            width: 100%;
+            padding: 12px 16px;
+            font-family: var(--font-mono);
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            background: var(--bg-surface);
+            color: var(--ink);
+            border: var(--border-heavy);
+            box-shadow: 3px 3px 0px var(--ink);
+            cursor: pointer;
+        }
+
+        /* RESULTS AREA */
+        .results-canvas {
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .hero-decision {
+            display: grid;
+            grid-template-columns: 1.2fr 2fr;
+            border: var(--border-heavy);
+            box-shadow: var(--shadow-hard);
+        }
+
+        .hero-left {
+            background: var(--ink);
+            color: var(--bg-surface);
+            padding: 20px 24px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .hero-region {
+            font-size: 36px;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            text-transform: uppercase;
+            color: #FFFFFF;
+            margin: 6px 0;
+        }
+
+        .hero-right {
+            padding: 20px 24px;
+            background: var(--bg-surface);
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            align-items: center;
+        }
+
+        .stat-block .stat-kicker {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            color: var(--ink-muted);
+            text-transform: uppercase;
+        }
+
+        .stat-block .stat-num {
+            font-family: var(--font-mono);
+            font-size: 22px;
+            font-weight: 700;
+            margin-top: 4px;
+        }
+
+        .stat-block .stat-delta {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            font-weight: 700;
+            margin-top: 4px;
+        }
+
+        .delta-good {
+            color: var(--eco-green);
+        }
+
+        .delta-warn {
+            color: var(--swiss-red);
+        }
+
+        /* SWISS DATA TABLE */
+        .swiss-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: var(--font-mono);
+            font-size: 13px;
+            border: var(--border-heavy);
+        }
+
+        .swiss-table th {
+            background: var(--bg-paper);
+            text-align: left;
+            padding: 12px 14px;
+            border-bottom: var(--border-heavy);
+            border-right: var(--border);
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .swiss-table td {
+            padding: 12px 14px;
+            border-bottom: var(--border);
+            border-right: var(--border);
+        }
+
+        .swiss-table tr.row-pareto {
+            background: #F0FDF4;
+            font-weight: 700;
+        }
+
+        /* VISUAL COMPARISON BARS */
+        .bars-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .bar-card {
+            border: var(--border);
+            padding: 16px;
+            background: var(--bg-paper);
+        }
+
+        .bar-row {
+            margin-bottom: 10px;
+        }
+
+        .bar-row-meta {
+            display: flex;
+            justify-content: space-between;
+            font-family: var(--font-mono);
+            font-size: 11px;
+            margin-bottom: 4px;
+        }
+
+        .bar-track {
+            height: 16px;
+            width: 100%;
+            background: var(--bg-surface);
+            border: var(--border);
+            overflow: hidden;
+        }
+
+        .bar-fill {
+            height: 100%;
+            transition: width 0.25s ease;
+        }
+
+        @media (max-width: 1080px) {
+
+            .masthead,
+            .telemetry-strip,
+            .workspace,
+            .hero-decision,
+            .bars-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .control-panel {
+                border-right: none;
+                border-bottom: var(--border-heavy);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="shell">
+        <!-- MASTHEAD -->
+        <header class="masthead">
+            <div class="masthead-cell">
+                <div class="kicker">SYS.01 // GEO-DISTRIBUTED WORKLOAD SCHEDULER</div>
+                <div class="brand-title">ECOCLUSTER PARETO CONSOLE</div>
+                <div class="status-badge">
+                    <span class="dot"></span> FASTAPI TELEMETRY ENGINE ONLINE
+                </div>
+            </div>
+            <div class="masthead-cell">
+                <div class="kicker">THERMODYNAMIC ENGINE</div>
+                <div style="font-family: var(--font-mono); font-size: 13px; font-weight: 600;">
+                    STULL WET-BULB ($T_{wb}$)<br />
+                    NON-LINEAR $WUE_{\text{site}}$ &amp; $PUE$
+                </div>
+                <div class="kicker" style="margin-top: 8px;">4 ACTIVE DATA CENTER NODES</div>
+            </div>
+            <div class="masthead-cell">
+                <div class="kicker">SIMULATED TIMELINE CLOCK</div>
+                <div class="control-label">
+                    <span>DIURNAL HOUR</span>
+                    <span id="clock-display" style="font-size: 16px; font-weight: 700; color: var(--swiss-red);">HR 00
+                        (14:00)</span>
+                </div>
+                <input type="range" id="hour-slider" min="0" max="72" value="0"
+                    oninput="updateEnvironmentClock(this.value)" />
+            </div>
+        </header>
+
+        <!-- ENVIRONMENTAL DIGITAL TWIN TELEMETRY -->
+        <div class="section-bar">
+            <span>01 // REAL-TIME REGIONAL ENVIRONMENTAL DIGITAL TWIN</span>
+            <span id="telemetry-timestamp">SNAPSHOT: HOUR 0</span>
+        </div>
+        <section class="telemetry-strip" id="telemetry-grid">
+            <!-- Dynamically populated by JS -->
+        </section>
+
+        <!-- INTERACTIVE PARETO WORKSPACE -->
+        <div class="section-bar">
+            <span>02 // MULTI-OBJECTIVE PARETO TUNING &amp; SLA SCHEDULER</span>
+            <span id="frontier-meta">CANDIDATE SPACE READY</span>
+        </div>
+
+        <div class="workspace">
+            <!-- LEFT SIDEBAR: SLIDERS & JOB INPUTS -->
+            <aside class="control-panel">
+                <div class="panel-group">
+                    <div class="panel-title">
+                        <span>PARETO OBJECTIVE WEIGHTS</span>
+                        <span style="color: var(--swiss-red);">LIVE</span>
+                    </div>
+
+                    <div class="control-row">
+                        <div class="control-label">
+                            <span>CARBON WEIGHT (w_carbon)</span>
+                            <span id="val-w-carbon">1.50</span>
+                        </div>
+                        <input type="range" id="w-carbon" min="0.0" max="5.0" step="0.1" value="1.5"
+                            oninput="syncWeights()" />
+                    </div>
+
+                    <div class="control-row">
+                        <div class="control-label">
+                            <span>DROUGHT WATER WEIGHT (w_water)</span>
+                            <span id="val-w-water">0.05</span>
+                        </div>
+                        <input type="range" id="w-water" min="0.00" max="0.50" step="0.01" value="0.05"
+                            oninput="syncWeights()" />
+                    </div>
+
+                    <div class="control-row">
+                        <div class="control-label">
+                            <span>ELECTRICITY COST WEIGHT (w_cost)</span>
+                            <span id="val-w-cost">0.20</span>
+                        </div>
+                        <input type="range" id="w-cost" min="0.00" max="2.00" step="0.05" value="0.20"
+                            oninput="syncWeights()" />
+                    </div>
+                </div>
+
+                <div class="panel-group">
+                    <div class="panel-title">
+                        <span>WORKLOAD TRACE SPECIFICATION</span>
+                        <span>SLA</span>
+                    </div>
+
+                    <div class="input-grid-2">
+                        <div class="control-row">
+                            <div class="control-label"><span>JOB ID</span></div>
+                            <input type="text" id="job-id" value="LLM-TRAIN-01" />
+                        </div>
+                        <div class="control-row">
+                            <div class="control-label"><span>ARRIVAL (HR)</span></div>
+                            <input type="number" id="job-arrival" value="0" min="0" max="48" />
+                        </div>
+                        <div class="control-row">
+                            <div class="control-label"><span>DURATION (HRS)</span></div>
+                            <input type="number" id="job-duration" value="4" min="1" max="24" />
+                        </div>
+                        <div class="control-row">
+                            <div class="control-label"><span>DEADLINE (HR)</span></div>
+                            <input type="number" id="job-deadline" value="14" min="2" max="72" />
+                        </div>
+                    </div>
+
+                    <div class="control-row" style="margin-top: 10px;">
+                        <div class="control-label"><span>COMPUTE POWER DEMAND (kW / HR)</span></div>
+                        <input type="number" id="job-energy" value="250" step="25" min="25" max="1000" />
+                    </div>
+                </div>
+
+                <button class="btn-primary" onclick="evaluateSingleJob()">EXECUTE PARETO EVALUATION</button>
+                <button class="btn-secondary" onclick="runBatchBenchmark()">RUN 25-JOB CLUSTER QUEUE SIMULATION</button>
+            </aside>
+
+            <!-- RIGHT WORKSPACE: PARETO DECISION & POLICY COMPARISON -->
+            <main class="results-canvas">
+                <div class="hero-decision">
+                    <div class="hero-left">
+                        <div class="kicker" style="color: #A1A1AA;">SELECTED PARETO OPTIMAL TARGET</div>
+                        <div class="hero-region" id="pareto-region">STOCKHOLM</div>
+                        <div style="font-family: var(--font-mono); font-size: 12px; color: #E4E4E7;" id="pareto-window">
+                            EXECUTION WINDOW: HR 08 &rarr; HR 12
+                        </div>
+                    </div>
+                    <div class="hero-right">
+                        <div class="stat-block">
+                            <div class="stat-kicker">CARBON FOOTPRINT</div>
+                            <div class="stat-num" id="pareto-co2">-- kg</div>
+                            <div class="stat-delta delta-good" id="delta-co2">--% vs Greedy</div>
+                        </div>
+                        <div class="stat-block">
+                            <div class="stat-kicker">COOLING WATER</div>
+                            <div class="stat-num" id="pareto-water">-- L</div>
+                            <div class="stat-delta delta-good" id="delta-water">--% vs Greedy</div>
+                        </div>
+                        <div class="stat-block">
+                            <div class="stat-kicker">OPEX ELECTRICITY</div>
+                            <div class="stat-num" id="pareto-cost">$--</div>
+                            <div class="stat-delta" id="pareto-energy">-- kWh Total</div>
+                        </div>
+                        <div class="stat-block">
+                            <div class="stat-kicker">COMPOSITE SCORE</div>
+                            <div class="stat-num" id="pareto-score">--</div>
+                            <div class="stat-delta delta-good" id="pareto-sla">SLA MET</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4-POLICY COMPARISON TABLE -->
+                <div>
+                    <div class="kicker" style="margin-bottom: 8px;">COMPARATIVE POLICY MATRIX (SINGLE WORKLOAD)</div>
+                    <table class="swiss-table">
+                        <thead>
+                            <tr>
+                                <th>POLICY ENGINE</th>
+                                <th>TARGET REGION</th>
+                                <th>START &rarr; END</th>
+                                <th>ENERGY (kWh)</th>
+                                <th>CARBON (kg CO2)</th>
+                                <th>WATER (Liters)</th>
+                                <th>COST (USD)</th>
+                                <th>PARETO SCORE</th>
+                            </tr>
+                        </thead>
+                        <tbody id="policy-table-body">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- VISUAL TRADE-OFF BARS -->
+                <div class="bars-grid">
+                    <div class="bar-card">
+                        <div class="panel-title"><span>CARBON EMISSIONS BY POLICY (kg CO2eq)</span></div>
+                        <div id="carbon-bars"></div>
+                    </div>
+                    <div class="bar-card">
+                        <div class="panel-title"><span>EVAPORATIVE COOLING WATER BY POLICY (Liters)</span></div>
+                        <div id="water-bars"></div>
+                    </div>
+                </div>
+
+                <!-- BATCH QUEUE BENCHMARK SECTION -->
+                <div id="batch-section" style="display: none;">
+                    <div class="kicker" style="margin-bottom: 8px; color: var(--swiss-red);">
+                        CLUSTER CAPACITY QUEUE SIMULATION (500 kW / REGION CAP)
+                    </div>
+                    <table class="swiss-table">
+                        <thead>
+                            <tr>
+                                <th>POLICY</th>
+                                <th>SLA MET (%)</th>
+                                <th>TOTAL CO2 (kg)</th>
+                                <th>TOTAL WATER (L)</th>
+                                <th>TOTAL COST ($)</th>
+                                <th>REGIONAL JOB ALLOCATION</th>
+                            </tr>
+                        </thead>
+                        <tbody id="batch-table-body"></tbody>
+                    </table>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        const REGIONS = ["mumbai", "rajasthan", "stockholm", "oregon"];
+
+        async function updateEnvironmentClock(hour) {
+            const clockHour = (14 + parseInt(hour)) % 24;
+            const formattedClock = String(clockHour).padStart(2, "0") + ":00";
+            document.getElementById("clock-display").textContent = `HR ${String(hour).padStart(2, "0")} (${formattedClock})`;
+            document.getElementById("telemetry-timestamp").textContent = `SNAPSHOT: HOUR ${hour}`;
+
+            const container = document.getElementById("telemetry-grid");
+            const cardsHtml = [];
+
+            for (const region of REGIONS) {
+                const res = await fetch(`/telemetry/environment?region=${region}&hour=${hour}`);
+                const data = await res.json();
+
+                cardsHtml.push(`
+        <div class="region-card" id="card-${region}">
+          <div class="region-header">
+            <span class="region-name">${region}</span>
+            <span class="wsi-tag">WSI ${data.water_stress_multiplier.toFixed(1)}x</span>
+          </div>
+          <div class="metric-grid">
+            <div class="metric-box">
+              <div class="label">WET-BULB (Twb)</div>
+              <div class="val">${data.wet_bulb_temp_c.toFixed(1)}°C</div>
+            </div>
+            <div class="metric-box">
+              <div class="label">GRID CARBON</div>
+              <div class="val">${data.carbon_intensity_g_kwh.toFixed(0)} <span style="font-size:11px">g/kWh</span></div>
+            </div>
+            <div class="metric-box">
+              <div class="label">DYNAMIC PUE</div>
+              <div class="val">${data.pue.toFixed(3)}</div>
+            </div>
+            <div class="metric-box">
+              <div class="label">WUE (WATER)</div>
+              <div class="val">${data.wue_site.toFixed(2)} <span style="font-size:11px">L/kWh</span></div>
+            </div>
+          </div>
+        </div>
+      `);
+            }
+            container.innerHTML = cardsHtml.join("");
+        }
+
+        function syncWeights() {
+            document.getElementById("val-w-carbon").textContent = parseFloat(document.getElementById("w-carbon").value).toFixed(2);
+            document.getElementById("val-w-water").textContent = parseFloat(document.getElementById("w-water").value).toFixed(2);
+            document.getElementById("val-w-cost").textContent = parseFloat(document.getElementById("w-cost").value).toFixed(2);
+            evaluateSingleJob();
+        }
+
+        async function evaluateSingleJob() {
+            const job = {
+                job_id: document.getElementById("job-id").value || "LLM-TRAIN-01",
+                arrival_time_hr: parseInt(document.getElementById("job-arrival").value) || 0,
+                duration_hrs: parseInt(document.getElementById("job-duration").value) || 4,
+                energy_per_hr_kwh: parseFloat(document.getElementById("job-energy").value) || 250.0,
+                deadline_hrs: parseInt(document.getElementById("job-deadline").value) || 14,
+                priority: 3
+            };
+
+            const wCarbon = parseFloat(document.getElementById("w-carbon").value);
+            const wWater = parseFloat(document.getElementById("w-water").value);
+            const wCost = parseFloat(document.getElementById("w-cost").value);
+
+            const url = `/schedule/single?weight_carbon=${wCarbon}&weight_water=${wWater}&weight_cost=${wCost}`;
+            const res = await fetch(url, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(job)
+            });
+
+            if (!res.ok) {
+                alert("SLA Violation: Ensure Deadline Hour >= Arrival Hour + Duration Hours.");
+                return;
+            }
+
+            const data = await res.json();
+            const p = data.pareto;
+            const g = data.greedy;
+
+            document.getElementById("frontier-meta").textContent =
+                `PARETO FRONTIER: ${data.frontier_count} NON-DOMINATED / ${data.total_windows} VALID WINDOWS`;
+
+            // Update Hero Banner
+            document.getElementById("pareto-region").textContent = p.selected_region.toUpperCase();
+            document.getElementById("pareto-window").innerHTML = `EXECUTION WINDOW: HR ${p.start_hour} &rarr; HR ${p.finish_hour}`;
+            document.getElementById("pareto-co2").textContent = `${p.total_carbon_kg.toFixed(1)} kg`;
+            document.getElementById("pareto-water").textContent = `${p.total_water_liters.toFixed(1)} L`;
+            document.getElementById("pareto-cost").textContent = `$${p.total_cost_usd.toFixed(2)}`;
+            document.getElementById("pareto-energy").textContent = `${p.total_energy_kwh.toFixed(1)} kWh Total`;
+            document.getElementById("pareto-score").textContent = p.pareto_score.toFixed(2);
+
+            const co2Saved = g.total_carbon_kg > 0 ? ((1 - p.total_carbon_kg / g.total_carbon_kg) * 100).toFixed(1) : "0.0";
+            const waterSaved = g.total_water_liters > 0 ? ((1 - p.total_water_liters / g.total_water_liters) * 100).toFixed(1) : "0.0";
+            document.getElementById("delta-co2").textContent = `-${co2Saved}% vs Greedy`;
+            document.getElementById("delta-water").textContent = `-${waterSaved}% vs Greedy`;
+
+            // Highlight active region card
+            REGIONS.forEach(r => {
+                const el = document.getElementById(`card-${r}`);
+                if (el) el.classList.toggle("active-target", r === p.selected_region);
+            });
+
+            // Populate Table
+            const order = [
+                { key: "greedy", label: "GREEDY (RUN-NOW)" },
+                { key: "carbon_only", label: "CARBON-ONLY" },
+                { key: "water_only", label: "WATER-ONLY" },
+                { key: "pareto", label: "PARETO ECO (OURS)" }
+            ];
+
+            const tbody = document.getElementById("policy-table-body");
+            tbody.innerHTML = order.map(item => {
+                const d = data[item.key];
+                const isPareto = item.key === "pareto";
+                return `
+        <tr class="${isPareto ? 'row-pareto' : ''}">
+          <td>${item.label}</td>
+          <td>${d.selected_region.toUpperCase()}</td>
+          <td>HR ${d.start_hour} &rarr; HR ${d.finish_hour}</td>
+          <td>${d.total_energy_kwh.toFixed(1)}</td>
+          <td>${d.total_carbon_kg.toFixed(2)}</td>
+          <td>${d.total_water_liters.toFixed(2)}</td>
+          <td>$${d.total_cost_usd.toFixed(2)}</td>
+          <td>${d.pareto_score.toFixed(2)}</td>
+        </tr>
+      `;
+            }).join("");
+
+            // Render Comparative Bars
+            const maxCo2 = Math.max(...order.map(o => data[o.key].total_carbon_kg), 1);
+            const maxWater = Math.max(...order.map(o => data[o.key].total_water_liters), 1);
+
+            document.getElementById("carbon-bars").innerHTML = order.map(o => {
+                const val = data[o.key].total_carbon_kg;
+                const pct = (val / maxCo2) * 100;
+                const color = o.key === "pareto" ? "var(--eco-green)" : (o.key === "greedy" ? "var(--swiss-red)" : "var(--ink)");
+                return `
+        <div class="bar-row">
+          <div class="bar-row-meta"><span>${o.label}</span><span>${val.toFixed(1)} kg</span></div>
+          <div class="bar-track"><div class="bar-fill" style="width:${pct}%; background:${color};"></div></div>
+        </div>
+      `;
+            }).join("");
+
+            document.getElementById("water-bars").innerHTML = order.map(o => {
+                const val = data[o.key].total_water_liters;
+                const pct = (val / maxWater) * 100;
+                const color = o.key === "pareto" ? "var(--water-blue)" : (o.key === "greedy" ? "var(--swiss-red)" : "var(--ink)");
+                return `
+        <div class="bar-row">
+          <div class="bar-row-meta"><span>${o.label}</span><span>${val.toFixed(1)} L</span></div>
+          <div class="bar-track"><div class="bar-fill" style="width:${pct}%; background:${color};"></div></div>
+        </div>
+      `;
+            }).join("");
+        }
+
+        async function runBatchBenchmark() {
+            const jobs = [];
+            for (let i = 0; i < 25; i++) {
+                const arrival = i % 12;
+                const duration = 2 + (i % 4);
+                jobs.push({
+                    job_id: `BATCH-${String(i).padStart(3, "0")}`,
+                    arrival_time_hr: arrival,
+                    duration_hrs: duration,
+                    energy_per_hr_kwh: 100 + (i % 3) * 75,
+                    deadline_hrs: arrival + duration + 6 + (i % 6),
+                    priority: 2
+                });
+            }
+
+            const payload = {
+                jobs,
+                regional_capacity_kw: 500.0,
+                weight_carbon: parseFloat(document.getElementById("w-carbon").value),
+                weight_water: parseFloat(document.getElementById("w-water").value),
+                weight_cost: parseFloat(document.getElementById("w-cost").value)
+            };
+
+            const res = await fetch("/simulate/batch", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+            const results = await res.json();
+
+            document.getElementById("batch-section").style.display = "block";
+            document.getElementById("batch-table-body").innerHTML = results.map(r => `
+      <tr class="${r.policy_name === 'pareto' ? 'row-pareto' : ''}">
+        <td>${r.policy_name.toUpperCase()}</td>
+        <td>${r.sla_success_rate_pct.toFixed(1)}%</td>
+        <td>${r.total_carbon_kg.toFixed(1)}</td>
+        <td>${r.total_water_liters.toFixed(1)}</td>
+        <td>$${r.total_cost_usd.toFixed(2)}</td>
+        <td>${JSON.stringify(r.regional_job_distribution)}</td>
+      </tr>
+    `).join("");
+        }
+
+        window.addEventListener("DOMContentLoaded", async () => {
+            await updateEnvironmentClock(0);
+            await evaluateSingleJob();
+        });
+    </script>
+</body>
+
+</html>
