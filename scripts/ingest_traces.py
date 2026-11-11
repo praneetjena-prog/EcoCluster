@@ -1,6 +1,12 @@
 import os
+import sys
+from pathlib import Path
 import random
 import pandas as pd
+
+# Add project root to Python module search path
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
 from src.schemas import Job
 
 def generate_sample_cluster_workload(num_jobs: int = 100) -> pd.DataFrame:
